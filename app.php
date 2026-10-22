@@ -1,41 +1,84 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/constants.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-use Symfony\Component\Debug\ErrorHandler;
-use Symfony\Component\Debug\ExceptionHandler;
+use Core\Handler\ErrorHandler;
+use Core\Exception\RateLimitExceededException;
 use Symfony\Component\Routing\RouteCollection;
-
-$app = new Silex\Application();
-
-/** @var \Core\Entity\AppParameters $app['params'] */
-$app['params'] = new \Core\Entity\AppParameters(__DIR__ . '/config/parameters.yml');
-
-
-$app['env'] = $_ENV['env'] ?? 'dev';
-$exceptionHandlerFunction = function (\Exception $e): void {
-    $out = fopen('php://stdout', 'w');
-    fputs(
-        $out,
-        "Message: {$e->getMessage()} \nFile: {$e->getFile()}\nLine: {$e->getLine()}\nTrace: {$e->getTraceAsString()}"
-    );
-    fclose($out);
-};
-
-ErrorHandler::register();
-$exceptionHandler = ExceptionHandler::register($app['params']->parameterByKey('debug'));
-$exceptionHandler->setHandler($exceptionHandlerFunction);
-
-if ('test' !== $app['env']) {
-    $app->error($exceptionHandlerFunction);
-}
-
+use Symfony\Component\HttpFoundation\Response;
+use Silex\Application;
+/**
+ * Create directories if they don't exist
+ */
 if (!is_dir(UPLOAD_DIR)) {
     mkdir(UPLOAD_DIR, 0777, true);
 }
 if (!is_dir(TMP_DIR)) {
     mkdir(TMP_DIR, 0777, true);
+}
+
+/**
+ * Create Silex application
+ */
+$app = new Application();
+
+/**
+ * Load application parameters
+ */
+$app['params'] = new \Core\Entity\AppParameters(__DIR__ . '/config/parameters.yml');
+
+/**
+ * Logging via Monolog settings
+ */
+$logLevel = $app['params']->parameterByKey('log_level');
+$logger = new Core\Entity\Logger('flyimg', $logLevel);
+$app['logger'] = $logger->getLogger();
+
+$exceptionHandlerFunction = function (\Exception $e) use ($app): Response {
+    $request = $app['request_stack']->getCurrentRequest();
+    $app['logger']->error(
+        '',
+        [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile() . ':' . $e->getLine(),
+            'uri' => is_null($request) ? '' : $request->getUri(),
+            'user_agent' => is_null($request) ? '' : $request->headers->get('User-Agent'),
+            'http_client_ip' => is_null($request) ? '' : $request->headers->get('X-Forwarded-For'),
+        ]
+    );
+    $htmlErrorHandler = new ErrorHandler($app['params']->parameterByKey('debug'));
+    $flattenException = $htmlErrorHandler->render($e);
+    // Use the HTTP status code carried by the exception (404 for unknown routes,
+    // 405 for wrong methods, 400/403/404 for app exceptions...) instead of always
+    // answering 500. Non-HTTP exceptions still end up as 500.
+    $response = new Response(
+        $flattenException->getAsString(),
+        $flattenException->getStatusCode(),
+        $flattenException->getHeaders()
+    );
+    // Handle rate limit exceptions with appropriate response
+    if ($e instanceof RateLimitExceededException) {
+        $limit = $e->getLimit();
+        $retryAfter = $e->getRetryAfter();
+        if ($limit !== null) {
+            $response->headers->set('X-RateLimit-Limit', (string)$limit);
+        }
+        $response->headers->set('X-RateLimit-Remaining', '0');
+        if ($retryAfter !== null) {
+            $response->headers->set('X-RateLimit-Reset', (string)$retryAfter);
+            $response->headers->set('Retry-After', (string)$retryAfter);
+        }
+        $response->setStatusCode(429);
+    }
+    return $response;
+};
+
+// Exposed as a protected service so it can be unit tested.
+$app['error.handler'] = $app->protect($exceptionHandlerFunction);
+
+if (!isset($_ENV['env']) || $_ENV['env'] !== 'test') {
+    $app->error($exceptionHandlerFunction);
 }
 
 /**
@@ -49,8 +92,9 @@ $app['routes'] = $app->extend(
     }
 );
 
-/** Register Storage provider */
-
+/**
+ * Register Storage provider
+ */
 switch ($app['params']->parameterByKey('storage_system')) {
     case 's3':
         $app->register(new \Core\StorageProvider\S3StorageProvider());
@@ -95,7 +139,9 @@ if (!empty($argv[1]) && !empty($argv[2]) && $argv[1] == 'encrypt') {
     return;
 }
 
-/** debug conf */
+/**
+ * Debug configuration
+ */
 $app['debug'] = $app['params']->parameterByKey('debug');
 
 return $app;

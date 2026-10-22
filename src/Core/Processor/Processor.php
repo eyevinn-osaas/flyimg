@@ -5,6 +5,7 @@ namespace Core\Processor;
 use Core\Entity\Command;
 use Core\Entity\Image\OutputImage;
 use Core\Exception\ExecFailedException;
+use Monolog\Registry;
 
 /**
  * Class Processor
@@ -12,8 +13,8 @@ use Core\Exception\ExecFailedException;
  */
 class Processor
 {
-    /** MozJPEG bin path */
-    public const MOZJPEG_COMMAND = '/opt/mozjpeg/cjpeg';
+    /** MozJPEG bin path (make install places the binary in bin/) */
+    public const MOZJPEG_COMMAND = '/opt/mozjpeg/bin/cjpeg';
 
     /** ImageMagick bin path*/
     public const IM_CONVERT_COMMAND = '/usr/local/bin/magick';
@@ -24,7 +25,7 @@ class Processor
     public const CWEBP_COMMAND = '/usr/bin/cwebp';
 
     /** FaceDetect bin path */
-    public const FACEDETECT_COMMAND = '/usr/local/bin/facedetect';
+    public const FACEDETECT_COMMAND = '/usr/bin/python3 /var/www/html/python/facedetect.py';
 
     /** Smart Crop script */
     public const SMARTCROP_COMMAND = '/usr/bin/python3 /var/www/html/python/smartcrop.py';
@@ -33,7 +34,20 @@ class Processor
     public const FFMPEG_COMMAND = '/usr/bin/ffmpeg';
 
     /** OutputImage options excluded from IM command */
-    public const EXCLUDED_IM_OPTIONS = ['quality', 'mozjpeg', 'refresh', 'webp-lossless'];
+    public const EXCLUDED_IM_OPTIONS = ['quality', 'mozjpeg', 'refresh', 'webp-lossless', 'webp-method', 'jxl-effort'];
+
+    /**
+     * @var Logger
+     */
+    protected $logger;
+
+    /**
+     * @param Logger $logger
+     */
+    public function __construct()
+    {
+        $this->logger = Registry::getInstance('flyimg');
+    }
 
     /**
      * @param Command $command
@@ -43,22 +57,34 @@ class Processor
      */
     public function execute(Command $command): array
     {
-        exec($command . ' 2>&1', $output, $code);
-        if (count($output) === 0) {
-            $outputError = $code;
+        $descriptorspec = [
+            0 => ["pipe", "r"],  // stdin
+            1 => ["pipe", "w"],  // stdout
+            2 => ["pipe", "w"]   // stderr
+        ];
+
+        $process = proc_open($command, $descriptorspec, $pipes);
+
+        if (is_resource($process)) {
+            $output = stream_get_contents($pipes[1]);
+            $errorOutput = stream_get_contents($pipes[2]);
+
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+
+            $return_value = proc_close($process);
+
+            if ($return_value !== 0) {
+                throw new ExecFailedException(
+                    "Error output: $errorOutput\n" .
+                    "Command: $command"
+                );
+            }
         } else {
-            $outputError = implode(PHP_EOL, $output);
+            throw new ExecFailedException("Failed to initiate the process.");
         }
 
-        if ($code !== 0) {
-            throw new ExecFailedException(
-                "Command failed.\nThe exit code: " .
-                    $outputError . "\nThe last line of output: " .
-                    $command
-            );
-        }
-
-        return $output;
+        return explode(PHP_EOL, $output);
     }
 
     /**

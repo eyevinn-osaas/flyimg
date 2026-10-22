@@ -1,5 +1,475 @@
 # Flyimg Changelog
 
+## [1.12.10](https://github.com/flyimg/flyimg/compare/1.12.9...1.12.10) (2026-10-22)
+
+
+### Bug Fixes
+
+* update base image to 1.8.7 ([5c1c794](https://github.com/flyimg/flyimg/commit/5c1c794fe3dd5665fdd7cf07be1e0eb1e0dcd9c8))
+
+## [1.12.9](https://github.com/flyimg/flyimg/compare/1.12.8...1.12.9) (2026-10-22)
+
+
+### Bug Fixes
+
+* update base image to 1.8.6 to address PHP vulnerability ([ccc7ba4](https://github.com/flyimg/flyimg/commit/ccc7ba49961c52f29b974c70ba80462093e61f6d)), closes [#631](https://github.com/flyimg/flyimg/issues/631)
+
+## [1.12.8](https://github.com/flyimg/flyimg/compare/1.12.7...1.12.8) (2026-10-22)
+
+
+### Bug Fixes
+
+* answer 400/404 for a missing or non-existing source instead of 503 ([2ec046c](https://github.com/flyimg/flyimg/commit/2ec046c286bafeeeb3dc9737df1e4a58d3fdb7b4))
+
+## [1.12.7](https://github.com/flyimg/flyimg/compare/1.12.6...1.12.7) (2026-10-21)
+
+
+### Bug Fixes
+
+* return the exception HTTP status code instead of always 500 ([8fa0b6c](https://github.com/flyimg/flyimg/commit/8fa0b6cbdb5c11ab6397c128c433d35b1ba73199))
+
+## [1.12.6](https://github.com/flyimg/flyimg/compare/1.12.5...1.12.6) (2026-09-29)
+
+
+### Bug Fixes
+
+* encode webp with cwebp instead of imagemagick defines ([dde396d](https://github.com/flyimg/flyimg/commit/dde396d63cbdfde08e02c09225f396d66052ff6d))
+
+## [1.12.5](https://github.com/flyimg/flyimg/compare/1.12.4...1.12.5) (2026-09-02)
+
+
+### Bug Fixes
+
+* restore MozJPEG output for palette PNGs with transparency ([ef348cf](https://github.com/flyimg/flyimg/commit/ef348cf4a473345457d3daa6c054f98c3203357a)), closes [#622](https://github.com/flyimg/flyimg/issues/622)
+* stop comparing JPEG XL output by exact file size ([23d66eb](https://github.com/flyimg/flyimg/commit/23d66eb3538ba6e8d726fc30d87dc5b8fa8207ea))
+
+## [1.12.4](https://github.com/flyimg/flyimg/compare/1.12.3...1.12.4) (2026-07-27)
+
+
+### Bug Fixes
+
+* enhance deployment process with cloudflared integration ([a3fb455](https://github.com/flyimg/flyimg/commit/a3fb455b9573f4327e143c92199d96d47fb7f1f1))
+
+## [1.12.3](https://github.com/flyimg/flyimg/compare/1.12.2...1.12.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* sanitize webp-method before shell command assembly ([6e75b63](https://github.com/flyimg/flyimg/commit/6e75b63080818ca501d4768fb95274a67448921b))
+
+## [1.12.2](https://github.com/flyimg/flyimg/compare/1.12.1...1.12.2) (2026-06-24)
+
+
+### Bug Fixes
+
+* update compose to fix security vulnerabilities ([8fc4aa3](https://github.com/flyimg/flyimg/commit/8fc4aa3cb39a6617c210becdcbbbc5671c39240a))
+
+## [1.12.1](https://github.com/flyimg/flyimg/compare/1.12.0...1.12.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* update security dependencies ([47475aa](https://github.com/flyimg/flyimg/commit/47475aac868f5ba9ffb17c87100eca66bc18df1e))
+
+# [1.12.0](https://github.com/flyimg/flyimg/compare/1.11.0...1.12.0) (2026-02-07)
+
+
+### Features
+
+* update Flyimg logo references in documentation and views ([5e10866](https://github.com/flyimg/flyimg/commit/5e108661f73fa892c3d9cdbb2d34d2b9dbe0ee98))
+
+# [1.11.0](https://github.com/flyimg/flyimg/compare/1.10.3...1.11.0) (2026-01-31)
+
+
+### Bug Fixes
+
+* fix Security alerts by Dependabot alerts ([079e4c4](https://github.com/flyimg/flyimg/commit/079e4c4cf0d687673a0f18a3d922d25926ccbbce))
+
+
+### Features
+
+* Enhance rate limiting functionality by introducing custom intervals for request limits. ([e82d1c9](https://github.com/flyimg/flyimg/commit/e82d1c953566ef8ffe7abe6ce34802cbaf956a71))
+
+## [1.10.3](https://github.com/flyimg/flyimg/compare/1.10.2...1.10.3) (2026-01-14)
+
+
+### Bug Fixes
+
+* Harden client-side security and GitHub Actions GITHUB_TOKEN permissions ([b0ac9e4](https://github.com/flyimg/flyimg/commit/b0ac9e47a70fed69965c08a67482559172de179d))
+
+## [1.10.2](https://github.com/flyimg/flyimg/compare/1.10.1...1.10.2) (2026-01-12)
+
+
+### Bug Fixes
+
+* fix preserve-aspect-ratio option, add tests to cover that, closes [#599](https://github.com/flyimg/flyimg/issues/599) ([46a0c71](https://github.com/flyimg/flyimg/commit/46a0c71176de951bdd035ce3e969055257364eab))
+
+## [1.10.1](https://github.com/flyimg/flyimg/compare/1.10.0...1.10.1) (2025-11-28)
+
+
+### Bug Fixes
+
+* add instance-group identifier for Redis rate limiting, closes [#595](https://github.com/flyimg/flyimg/issues/595) ([850f853](https://github.com/flyimg/flyimg/commit/850f85347c95ad0c9b0667b56ffdcbacc7493b34))
+
+# [1.10.0](https://github.com/flyimg/flyimg/compare/1.9.1...1.10.0) (2025-11-14)
+
+
+### Bug Fixes
+
+* conditionally enable rate limiting based on configuration parameter ([49402f6](https://github.com/flyimg/flyimg/commit/49402f63943bd9d2d7dd04654433485335b86db9))
+
+
+### Features
+
+* implement rate limiting functionality with configurable parameters and response headers ([fafbad3](https://github.com/flyimg/flyimg/commit/fafbad3e9aeb6bc52c8969a659ff47686e019c6d))
+* implement Redis-based rate limiting and remove file-based implementation ([eb9099b](https://github.com/flyimg/flyimg/commit/eb9099b4507ab68eba44cd19019e7a5327a74ce1))
+
+## [1.9.1](https://github.com/flyimg/flyimg/compare/1.9.0...1.9.1) (2025-10-19)
+
+
+### Bug Fixes
+
+* enhance S3 configuration for IRSA support and update documentation, closes [#590](https://github.com/flyimg/flyimg/issues/590) ([58a77d8](https://github.com/flyimg/flyimg/commit/58a77d8967c6b8e3d0a554ec3a4e242c5a8cec4d))
+
+# [1.9.0](https://github.com/flyimg/flyimg/compare/1.8.1...1.9.0) (2025-09-25)
+
+
+### Bug Fixes
+
+* fix demo page option creation ([5eca9cb](https://github.com/flyimg/flyimg/commit/5eca9cba634bd2fc586af0d972bd25593f950470))
+* refactor upload handling in Response and DefaultController to support multipart and various content types ([713aaa8](https://github.com/flyimg/flyimg/commit/713aaa86a5524c19590ed59e98b6ac34ea997a77))
+
+
+### Features
+
+* add jxl-decoding-speed option and update jxl-effort default value ([ab4cbe5](https://github.com/flyimg/flyimg/commit/ab4cbe5421cb8af32e86313d2d3f36b2c84b23ef))
+* add support for JPEG XL, closes [#588](https://github.com/flyimg/flyimg/issues/588) ([b493227](https://github.com/flyimg/flyimg/commit/b4932273f2aa48bb525576e0927412589d06fa62))
+
+## [1.8.1](https://github.com/flyimg/flyimg/compare/1.8.0...1.8.1) (2025-09-20)
+
+
+### Bug Fixes
+
+* better error handling in the demo page, closes [#586](https://github.com/flyimg/flyimg/issues/586) ([42b10dd](https://github.com/flyimg/flyimg/commit/42b10ddc4767275300ab1d56a15bea93062557d8))
+
+# [1.8.0](https://github.com/flyimg/flyimg/compare/1.7.11...1.8.0) (2025-09-18)
+
+
+### Bug Fixes
+
+* correct PHPDoc formatting ([e271b70](https://github.com/flyimg/flyimg/commit/e271b70b42ab77e471c663dac366218fe62f5a17))
+
+
+### Features
+
+* add support for POST uploads and S3 sources ([e27d180](https://github.com/flyimg/flyimg/commit/e27d18084ed4a6c035e7c212d8523a3d938f7788))
+
+## [1.7.11](https://github.com/flyimg/flyimg/compare/1.7.10...1.7.11) (2025-09-14)
+
+
+### Bug Fixes
+
+* add the possiblity to enable or disable the default demo page ([5edeba6](https://github.com/flyimg/flyimg/commit/5edeba65706b2fcd723f611ff1572c28845fa282))
+
+## [1.7.10](https://github.com/flyimg/flyimg/compare/1.7.9...1.7.10) (2025-09-09)
+
+
+### Bug Fixes
+
+* remove unnecessary whitespace in ImageHandler and improve exception message for temporary file access ([0028dc8](https://github.com/flyimg/flyimg/commit/0028dc8b2b9e60363e982af000e5e1c6b9e15b81))
+
+## [1.7.9](https://github.com/flyimg/flyimg/compare/1.7.8...1.7.9) (2025-09-09)
+
+
+### Bug Fixes
+
+* update cleanup-tmp.sh to delete only files older than 1 hour and add retry mechanism in ImageHandler for temporary file access ([e626d85](https://github.com/flyimg/flyimg/commit/e626d853eef3fad059683d4d41eef06498e14c1d))
+
+## [1.7.8](https://github.com/flyimg/flyimg/compare/1.7.7...1.7.8) (2025-09-08)
+
+
+### Bug Fixes
+
+* fix restricted domains where source image url contain one slash ([9554892](https://github.com/flyimg/flyimg/commit/955489278739a4d8a4b4f37b8f04a1b4be33b158))
+
+## [1.7.7](https://github.com/flyimg/flyimg/compare/1.7.6...1.7.7) (2025-09-07)
+
+
+### Bug Fixes
+
+* convert RGBA images to RGB before processing in SmartCrop ([e362835](https://github.com/flyimg/flyimg/commit/e36283570233b20fef435c0edc7c98532eda4f5d))
+
+## [1.7.6](https://github.com/flyimg/flyimg/compare/1.7.5...1.7.6) (2025-09-05)
+
+
+### Bug Fixes
+
+* update error handling and security domain checks ([dca76f5](https://github.com/flyimg/flyimg/commit/dca76f5f6eacff7d0c187a6733c3130c56550d61))
+* update exception message for domain restriction in SecurityHandler ([ff714be](https://github.com/flyimg/flyimg/commit/ff714be010a1bf604e51834b43be70a902f512fd))
+
+## [1.7.5](https://github.com/flyimg/flyimg/compare/1.7.4...1.7.5) (2025-07-29)
+
+
+### Bug Fixes
+
+* add dynamic URL support and copy functionality to example code snippet ([efa6725](https://github.com/flyimg/flyimg/commit/efa6725288316695d10a500bd59f450ef1ffba78))
+
+## [1.7.4](https://github.com/flyimg/flyimg/compare/1.7.3...1.7.4) (2025-07-04)
+
+
+### Bug Fixes
+
+* update base image to 1.8.1, enhance error message in InputImage, and add AVIF test cases ([4c713cd](https://github.com/flyimg/flyimg/commit/4c713cd6d88e7309add97e9291282879a303a191))
+
+## [1.7.3](https://github.com/flyimg/flyimg/compare/1.7.2...1.7.3) (2025-04-11)
+
+
+### Bug Fixes
+
+* add density option for PDF processing and update documentation. ([ad3f172](https://github.com/flyimg/flyimg/commit/ad3f172e6bd163aeaa379d103c7f7de96fffbac1))
+
+## [1.7.2](https://github.com/flyimg/flyimg/compare/1.7.1...1.7.2) (2025-01-31)
+
+
+### Bug Fixes
+
+* fix Gravity value is ignored and crop always uses West, closed [#561](https://github.com/flyimg/flyimg/issues/561) ([d49b9fd](https://github.com/flyimg/flyimg/commit/d49b9fda38794fbc9d7025930c98c9c46831c61e))
+
+## [1.7.1](https://github.com/flyimg/flyimg/compare/1.7.0...1.7.1) (2024-12-19)
+
+
+### Bug Fixes
+
+* add documentation for Support for -m and -mt flags with Cwebp, close [#547](https://github.com/flyimg/flyimg/issues/547) ([77b7f02](https://github.com/flyimg/flyimg/commit/77b7f0278c53f2151049074ab425948ab12c9b75))
+* add Support for -m and -mt flags with Cwebp , closes [#547](https://github.com/flyimg/flyimg/issues/547) ([29ea4a6](https://github.com/flyimg/flyimg/commit/29ea4a65c50794db82d00035d4b19d0c66635168))
+* fix linting errors ([7f3fdf5](https://github.com/flyimg/flyimg/commit/7f3fdf504a92475f3e83160a346ad31032839775))
+
+# [1.7.0](https://github.com/flyimg/flyimg/compare/1.6.2...1.7.0) (2024-12-02)
+
+
+### Features
+
+* move to AGPL-3.0 ([71ceebf](https://github.com/flyimg/flyimg/commit/71ceebf3a113e7278739d19748e1e2d57408c10b))
+
+## [1.6.2](https://github.com/flyimg/flyimg/compare/1.6.1...1.6.2) (2024-11-24)
+
+
+### Bug Fixes
+
+* fix cannot write mode RGBA as JPEG for avif image ([caff525](https://github.com/flyimg/flyimg/commit/caff525f1c19eb8c92ab85e990aaa382d1f81743))
+* refactor python code for the smartcrop and facedetect, remove unused features ([0049fbc](https://github.com/flyimg/flyimg/commit/0049fbcc83a42434676539e81dac1b09650c0405))
+
+## [1.6.1](https://github.com/flyimg/flyimg/compare/1.6.0...1.6.1) (2024-11-20)
+
+
+### Bug Fixes
+
+* add more tests to cover AppException and InvalidArgumentException ([9015c52](https://github.com/flyimg/flyimg/commit/9015c523c42b5a2221782f5f21b3d099fae8caa3))
+* add UnauthorizedExceptionTest , plus fixing linting errors ([78bd848](https://github.com/flyimg/flyimg/commit/78bd848b330580a1d801cafc5bc7e563923cd3a4))
+* add UnitTests for the new Exceptions ([19dae6a](https://github.com/flyimg/flyimg/commit/19dae6a282d3f26d9853296a4ebb284a360b05ae))
+* fix Github workflow, closes [#543](https://github.com/flyimg/flyimg/issues/543) ([4e11b25](https://github.com/flyimg/flyimg/commit/4e11b25af024e0436a0e0a2b21db542dc71e1c02))
+* fix linting errors and failed unitTest ([187154b](https://github.com/flyimg/flyimg/commit/187154b4a08a1af4de365c4cb890e17bd7b1d153))
+* fix linting errors and refactor /MockResponseCodeServer code ([329e2f6](https://github.com/flyimg/flyimg/commit/329e2f6cc6e7cbf89594c609b60f2a4105b98427))
+
+# [1.6.0](https://github.com/flyimg/flyimg/compare/1.5.0...1.6.0) (2024-11-18)
+
+
+### Bug Fixes
+
+* add remote_addr to logging ([80cef3f](https://github.com/flyimg/flyimg/commit/80cef3f4ee8fb733dbb0afd2cf925f6a3fbb4f7d))
+* add X-Real-IP header ([fdbbbfc](https://github.com/flyimg/flyimg/commit/fdbbbfc417a34b78efea77243efc9eb765c02853))
+* fix composer.lock file ([fbac5e4](https://github.com/flyimg/flyimg/commit/fbac5e40a17cbf5147f8956cc0a9f41cd0af5136))
+* fix linting errors ([246a0b8](https://github.com/flyimg/flyimg/commit/246a0b8505cfe9a73211203d3b8fc9e0d1f5a89e))
+* fixing linting error, related to [#538](https://github.com/flyimg/flyimg/issues/538) ([4f3877f](https://github.com/flyimg/flyimg/commit/4f3877fa911cc79608c826e7fa8b9028b60e8932))
+* use X-Forwarded-For to get real client ip ([18c57a7](https://github.com/flyimg/flyimg/commit/18c57a755a9283237f7a24aa1d0efe076ca7db13))
+
+
+### Features
+
+* add watermark feature and documentation ([d5dc6e5](https://github.com/flyimg/flyimg/commit/d5dc6e5e4b142f69905e9437a5b4c09dd80fe2a9))
+* replace silex/silex with flyimg/silex adaptation, which updates symfony components to the latest stable version, fixes [#535](https://github.com/flyimg/flyimg/issues/535) ([86cb7e7](https://github.com/flyimg/flyimg/commit/86cb7e711bebc804f56377a93442ea0577c162f7))
+* update Docker base image to use Nginx latest stable release ([a4d0873](https://github.com/flyimg/flyimg/commit/a4d0873a8cb7daa07b6d757325e6b4943fb310b5))
+
+# [1.5.0](https://github.com/flyimg/flyimg/compare/1.4.15...1.5.0) (2024-10-24)
+
+
+### Bug Fixes
+
+* add S3 storage optional parameters, update docs ([930dfe5](https://github.com/flyimg/flyimg/commit/930dfe587d330e0e167f323f3f2cd5301b8ae120))
+* fix linting ([3c1b53a](https://github.com/flyimg/flyimg/commit/3c1b53a5c1a8f2e35a6c3e7f5c6fe4092f96da29))
+* fix linting errors ([e79ed9a](https://github.com/flyimg/flyimg/commit/e79ed9a02b440732864d4d183419652a6ad613ff))
+* fix linting errors ([182a019](https://github.com/flyimg/flyimg/commit/182a019809f4a176456e33c1b8a3b5ff6e5d7263))
+* fix linting errors ([5114989](https://github.com/flyimg/flyimg/commit/5114989c058abd16bf93fb49b6d60aa1fb5b85c2))
+* fix linting errors and extract constants into a separate file ([dd24926](https://github.com/flyimg/flyimg/commit/dd24926d43aadee7192b05b112d89e00e34eba1b))
+* fix linting errors for the s3 storage ([ef65ead](https://github.com/flyimg/flyimg/commit/ef65eadaed72317e3f4c5899a2134c85943a8e64))
+* fix missing include statement ([e679f38](https://github.com/flyimg/flyimg/commit/e679f38e98874f583fc172d7123f322642a8a9cd))
+* fixing linting errors ([b2c6fd9](https://github.com/flyimg/flyimg/commit/b2c6fd9634fecd7c35153a6c6bb28deda461962d))
+* fixing linting errors ([feec80b](https://github.com/flyimg/flyimg/commit/feec80bffdf89754d27e30e371f58b6665e05581))
+* update documentation regarding s3 storage, related to [#533](https://github.com/flyimg/flyimg/issues/533) ([28a31b9](https://github.com/flyimg/flyimg/commit/28a31b9b36b11219781b51d7c5e6484cc0003ee6))
+
+
+### Features
+
+* adapt monologo as logging output and add log_level option, update docs, related to [#530](https://github.com/flyimg/flyimg/issues/530) ([ce3536d](https://github.com/flyimg/flyimg/commit/ce3536d604e886765d889e00d3ad52197320f2fb))
+
+## [1.4.15](https://github.com/flyimg/flyimg/compare/1.4.14...1.4.15) (2024-10-21)
+
+
+### Bug Fixes
+
+* fix incorrect version shown in footer, closes [#528](https://github.com/flyimg/flyimg/issues/528) ([011a017](https://github.com/flyimg/flyimg/commit/011a0170ae36e3d33bfaa5835f91fec46936a9fd))
+
+## [1.4.14](https://github.com/flyimg/flyimg/compare/1.4.13...1.4.14) (2024-10-09)
+
+
+### Bug Fixes
+
+* fix Same image content returned for different image URLs when loading within short timeframe, closes [#522](https://github.com/flyimg/flyimg/issues/522) ([632d790](https://github.com/flyimg/flyimg/commit/632d790392ecbabbe8d0e90ef6a0d72806d751c6))
+* fixing linting error ([35774da](https://github.com/flyimg/flyimg/commit/35774daffc30e9cad20481ccf65d34258ac264a0))
+
+## [1.4.13](https://github.com/flyimg/flyimg/compare/1.4.12...1.4.13) (2024-09-26)
+
+
+### Bug Fixes
+
+* fixing Cropping Image Changes Transparent Background To Solid Color, related to [#514](https://github.com/flyimg/flyimg/issues/514) ([753df2b](https://github.com/flyimg/flyimg/commit/753df2b38b61b333998864f2ea013a6e6b9ff8c2))
+
+## [1.4.12](https://github.com/flyimg/flyimg/compare/1.4.11...1.4.12) (2024-09-13)
+
+
+### Bug Fixes
+
+* fix the issue of tmp folder permission, closes [#506](https://github.com/flyimg/flyimg/issues/506) ([0ed831d](https://github.com/flyimg/flyimg/commit/0ed831d9f250593569ec243ccec2f518267d6f22))
+
+## [1.4.11](https://github.com/flyimg/flyimg/compare/1.4.10...1.4.11) (2024-09-12)
+
+
+### Bug Fixes
+
+* fix CHANGELOG entries ([19e9104](https://github.com/flyimg/flyimg/commit/19e9104d1fb9428e764ef4438da586e8157818f1))
+* fix Version and Changelog file ([be0bfeb](https://github.com/flyimg/flyimg/commit/be0bfeb2773371b119d57366fd91cfc9a61aba33))
+
+##  [1.4.10][Cleanup] (2024-09-12)
+
+
+## [1.4.9](https://github.com/flyimg/flyimg/compare/1.4.8...1.4.9) (2024-09-11)
+
+
+### Bug Fixes
+
+* add requirements.txt for the python scripts ([be130ac](https://github.com/flyimg/flyimg/commit/be130acb497843e2680b3e031763f4a527c1cc49))
+* fix linting errors ([bab7f7b](https://github.com/flyimg/flyimg/commit/bab7f7bc0686dfc4aaee677d1cb6e66f3212eec0))
+* fix smart crop feature, use new base image version ([dcc4034](https://github.com/flyimg/flyimg/commit/dcc4034936b2ea8188081874f486ffd27e06421d))
+* fixing python linting error ([553cc62](https://github.com/flyimg/flyimg/commit/553cc6220c7c438c8776a8be4197d73ee5b62eb7))
+
+## [1.4.8](https://github.com/flyimg/flyimg/compare/1.4.7...1.4.8) (2024-09-09)
+
+
+### Bug Fixes
+
+* fixing S3 not working, upgrading league/flysystem lib, closes[#493](https://github.com/flyimg/flyimg/issues/493) ([12cf7df](https://github.com/flyimg/flyimg/commit/12cf7df616425c3d6ce2d49e4c0951fe6e1f8137))
+
+## [1.4.7](https://github.com/flyimg/flyimg/compare/1.4.6...1.4.7) (2024-08-30)
+
+
+### Bug Fixes
+
+* use new base image version (php 8.3 + updated libraries versions) ([d09b6bb](https://github.com/flyimg/flyimg/commit/d09b6bb8a4102168b6f48b00eac6847c7334c681))
+
+## [1.4.6](https://github.com/flyimg/flyimg/compare/1.4.5...1.4.6) (2024-08-29)
+
+
+### Bug Fixes
+
+* add cleanup cron job to purge tmp folder ([03b46f9](https://github.com/flyimg/flyimg/commit/03b46f9ba76577ed52e64a5d28f470b605350ebe))
+* add cleanup cronjob documentation ([087b075](https://github.com/flyimg/flyimg/commit/087b0753b193332194ebd5e788a0e512226c0067))
+* add Cleanup cronjob to purge var/tmp folder ([1f44916](https://github.com/flyimg/flyimg/commit/1f44916442d41ff2842da8b466cd2bf4d9eb5b71))
+* use latest base image that include cron service ([5bcfa99](https://github.com/flyimg/flyimg/commit/5bcfa99cd15c71f44e6b75dc22ef0e475df66747))
+
+## [1.4.5](https://github.com/flyimg/flyimg/compare/1.4.4...1.4.5) (2024-08-27)
+
+
+### Bug Fixes
+
+* fixing linting issues ([dd82edb](https://github.com/flyimg/flyimg/commit/dd82edb35d6fd58e09722c538df2d0123a7d0240))
+* Redirect URLs without protocol schema are not handled correctly, closes [#486](https://github.com/flyimg/flyimg/issues/486) ([11b785e](https://github.com/flyimg/flyimg/commit/11b785e784d4980997e86899d4f8bdafe3b767f5))
+
+## [1.4.4](https://github.com/flyimg/flyimg/compare/1.4.3...1.4.4) (2024-08-26)
+
+
+### Bug Fixes
+
+* 483 ([0b8027f](https://github.com/flyimg/flyimg/commit/0b8027fbe63474addb7d390a75b8cd53789e108a))
+* 483 ([f50895e](https://github.com/flyimg/flyimg/commit/f50895e25b4e305bee8bcebce37ff2f350cc3c89))
+
+## [1.4.3](https://github.com/flyimg/flyimg/compare/1.4.2...1.4.3) (2024-05-28)
+
+
+### Bug Fixes
+
+* add css style to version element ([abc0e85](https://github.com/flyimg/flyimg/commit/abc0e855197f6dd33ef8f4ad755930109ee44fab))
+* add current version to the home page ([106461f](https://github.com/flyimg/flyimg/commit/106461f4812a39e7ce70ede71ae94ccda2d240d0))
+* add missing ambimax/semantic-release-composer library ([12f0640](https://github.com/flyimg/flyimg/commit/12f06403c2e703acae714e99b583e5f36e8cdaac))
+* fixing linting issues ([a5423f5](https://github.com/flyimg/flyimg/commit/a5423f53adb510196cd46c913913e3aa157fb3c1))
+* fixing the @iwavesmedia/semantic-release-composer lib ([8e2b55a](https://github.com/flyimg/flyimg/commit/8e2b55a9bb51c1e797f3b26cb5cd9d5ea3cc8d52))
+
+## [1.4.2](https://github.com/flyimg/flyimg/compare/1.4.1...1.4.2) (2024-05-28)
+
+
+### Bug Fixes
+
+* fix default sperator in js code ([ae85361](https://github.com/flyimg/flyimg/commit/ae8536174db6ef353a0e84c057ea3cedc6e2482a))
+
+## [1.4.1](https://github.com/flyimg/flyimg/compare/1.4.0...1.4.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* add options_separator to js code ([28fb1a0](https://github.com/flyimg/flyimg/commit/28fb1a0ebe940e2ba57e73fb03179d7c5f456015))
+
+# [1.4.0](https://github.com/flyimg/flyimg/compare/1.3.5...1.4.0) (2024-05-10)
+
+
+### Bug Fixes
+
+* Rename the build image to flyimg/flyimg, run composer update, remove linux/arm/v6 from target platform ([526b3a1](https://github.com/flyimg/flyimg/commit/526b3a10fc2ccd844fe96950e9266a73c132a638))
+
+
+### Features
+
+* Update README ([b71c09e](https://github.com/flyimg/flyimg/commit/b71c09e93b43306d7ec35e52a478fe4854daa842))
+
+## [1.3.5](https://github.com/flyimg/flyimg/compare/1.3.4...1.3.5) (2024-05-09)
+
+
+### Bug Fixes
+
+* update flyimg base version to support multi arch build, fixing [#414](https://github.com/flyimg/flyimg/issues/414) ([74d6336](https://github.com/flyimg/flyimg/commit/74d63362b6788a688c6d62742b783324cb9ec7d4))
+
+## [1.3.4](https://github.com/flyimg/flyimg/compare/1.3.3...1.3.4) (2024-02-27)
+
+
+### Bug Fixes
+
+* adding linux/arm64/v8 architecture ([53c4006](https://github.com/flyimg/flyimg/commit/53c400672269d6492b91c482438cf5da1f189226))
+
+## [1.3.3](https://github.com/flyimg/flyimg/compare/1.3.2...1.3.3) (2024-02-26)
+
+
+### Bug Fixes
+
+* add Multi-platform image with GitHub Actions, [#414](https://github.com/flyimg/flyimg/issues/414) ([2ab0d07](https://github.com/flyimg/flyimg/commit/2ab0d078e3f8c8eedfb8af682d075bcd7526bb6a))
+* fixing Create manifest list stage: ([91524d3](https://github.com/flyimg/flyimg/commit/91524d3276e06080af0cfea91a1737a4504bb706))
+* fixing Github Action workflow for Multi-platform Docker image ([1d0e144](https://github.com/flyimg/flyimg/commit/1d0e1444c75917a0dc82523192d3d4ace077c028))
+* fixing github workflow ([5aff78a](https://github.com/flyimg/flyimg/commit/5aff78a820025d5351a62090c1d85ef49b94e74b))
+* fixing linting errors ([f414470](https://github.com/flyimg/flyimg/commit/f4144703141942e8eb39ebab316d53f0caafabf7))
+* fixing missing PLATFORM_PAIR for the articat upload (Github Action CD) ([84b55ff](https://github.com/flyimg/flyimg/commit/84b55ffdb3cc5902208d968c6998cc6b2de48c14))
+* fixing Multi-platform image with GitHub Actions ([ce62db0](https://github.com/flyimg/flyimg/commit/ce62db07607989d63af0e08dd4366b0a691b55b3))
+* fixing the base image path ([954ff76](https://github.com/flyimg/flyimg/commit/954ff767a03fa48388ab8683d1d24418bb25db76))
+* fixing the REGISTRY_IMAGE tags ([eb3d09b](https://github.com/flyimg/flyimg/commit/eb3d09b989a43330ce14741189a743b282b7c6c9))
+* fixing typo in docker Create manifest list and push step ([5a7658b](https://github.com/flyimg/flyimg/commit/5a7658bc5cace8825be2b35f2f3de9b447ae183e))
+* fixing workflow release issue ([7864655](https://github.com/flyimg/flyimg/commit/7864655f5bc9995796bad0d63cf1e590c2b93ad7))
+
 ## [1.3.2](https://github.com/flyimg/flyimg/compare/1.3.1...1.3.2) (2024-02-21)
 
 
