@@ -51,6 +51,8 @@ class ImageProcessor extends Processor
         $this->sourceImageInfo = $outputImage->getInputImage()->sourceImageInfo();
         $this->options = $outputImage->getInputImage()->optionsBag();
         $command = $this->generateCommand($outputImage);
+        $this->logger->info('sourceImageUrl: ' . $outputImage->getInputImage()->sourceImageUrl());
+        $this->logger->info('ImageProcessorCommand: ' . $command);
         $this->execute($command);
 
         return $outputImage;
@@ -66,22 +68,31 @@ class ImageProcessor extends Processor
     protected function generateCommand(OutputImage $outputImage): Command
     {
         $command = new Command(self::IM_CONVERT_COMMAND);
+        $isPdf = $outputImage->getInputImage()->isInputPdf();
 
-        $pdfPageNo = $outputImage->getInputImage()->isInputPdf() ?
-            '[' . ($outputImage->extractKey('pdf-page-number') - 1) . ']' :
+        $pdfPageNo = $isPdf ?
+            '[' . $outputImage->extractKey('pdf-page-number') - 1 . ']' :
             '';
+
+        if ($isPdf && !empty($this->options->getOption('density'))) {
+            $command->addArgument('-density', $this->options->getOption('density'));
+        }
 
         $command->addArgument($this->getSourceImagePath($outputImage) . $pdfPageNo);
 
-        $command->addArgument($this->calculateSize());
+        if (!empty($this->options->getOption('gravity'))) {
+            $command->addArgument('-gravity', $this->options->getOption('gravity'));
+        }
 
-        $command->addArgument('-colorspace', $outputImage->extractKey('colorspace'));
+        $command->addArgument($this->calculateSize())
+            ->addArgument('-colorspace', $outputImage->extractKey('colorspace'));
 
         if (!empty($outputImage->extractKey('monochrome'))) {
             $command->addArgument('-monochrome');
         }
 
         $command->addArgument($this->checkForwardedOptions());
+        $command->addArgument($this->addTextAnnotation());
 
         //Strip is added internally by ImageMagick when using -thumbnail
         $withoutValueOptions = ['strip', 'auto-orient'];
@@ -135,7 +146,7 @@ class ImageProcessor extends Processor
         $command = [];
         $command[] = $this->getResizeOperator();
         $command[] = $this->getDimensions() . '^';
-        $command[] = '-gravity ' . $this->options->getOption('gravity');
+        $command[] = '-background none';
         $command[] = '-extent ' . $this->getDimensions();
 
         return implode(' ', $command);
@@ -149,8 +160,20 @@ class ImageProcessor extends Processor
     {
         $command = [];
         $command[] = $this->getResizeOperator();
-        $command[] = $this->getDimensions() .
-            ($this->options->getOption('preserve-natural-size') ? escapeshellarg('>') : '');
+
+        $dimensions = $this->getDimensions();
+        $preserveAspectRatio = $this->options->getOption('preserve-aspect-ratio');
+        $preserveNaturalSize = $this->options->getOption('preserve-natural-size');
+
+        if (!$preserveAspectRatio || $preserveAspectRatio === '0' || $preserveAspectRatio === 0) {
+            // par=0 → stretch: ignore aspect ratio and fill exactly w×h
+            $dimensions .= '!';
+        } elseif ($preserveNaturalSize && ($preserveNaturalSize === '1' || $preserveNaturalSize === 1)) {
+            // default behavior: don't upscale small images
+            $dimensions .= escapeshellarg('>');
+        }
+
+        $command[] = $dimensions;
 
         return implode(' ', $command);
     }
@@ -194,13 +217,31 @@ class ImageProcessor extends Processor
             $heicSpeed = $outputImage->getInputImage()->optionsBag()->appParameters()->parameterByKey('heic_speed');
             $parameter = "-define heic:speed=" . $heicSpeed . " -quality " . escapeshellarg($quality) .
                 " " . escapeshellarg($outputImage->getOutputTmpPath());
+        } elseif ($outputImage->isOutputJxl()) {
+            // Native JPEG XL via ImageMagick
+            $jxlEffort = $outputImage->extractKey('jxl-effort');
+            $jxlDecodingSpeed = $outputImage->extractKey('jxl-decoding-speed');
+            $jxlDecodingSpeedCmd = $jxlDecodingSpeed ? " -define jxl:decoding-speed=" . (int)$jxlDecodingSpeed : "";
+            // map quality 0-100 into jxl distance if IM expects it; IM supports -quality for JXL as of recent versions
+            $parameter = "-define jxl:effort=" . (int)$jxlEffort .
+                $jxlDecodingSpeedCmd .
+                " -quality " . escapeshellarg($quality) .
+                " " . escapeshellarg($outputImage->getOutputTmpPath());
         } elseif (is_executable(self::CWEBP_COMMAND) && $outputImage->isOutputWebP()) {
-            $lossLess = $outputImage->extractKey('webp-lossless') ? 'true' : 'false';
-            $parameter = "-quality " . escapeshellarg($quality) .
-                " -define webp:lossless=" . $lossLess . " " . escapeshellarg($outputImage->getOutputTmpPath());
+            // Keep WebP options off the ImageMagick command. `-define webp:*` makes
+            // ImageMagick decode the extensionless source as WebP and fail with
+            // "no decode delegate". cwebp encodes the decoded PNG instead.
+            $parameter = self::buildWebpEncoderCommand(
+                $quality,
+                $outputImage->extractKey('webp-lossless'),
+                $outputImage->getInputImage()->optionsBag()->appParameters()->parameterByKey('webp_threads', 1),
+                $outputImage->extractKey('webp-method'),
+                $outputImage->getOutputTmpPath()
+            );
         } elseif (is_executable(self::MOZJPEG_COMMAND) && $outputImage->isOutputMozJpeg()) {
             /** MozJpeg compression */
-            $parameter = "TGA:- | " . escapeshellarg(self::MOZJPEG_COMMAND)
+            // Force truecolor TGA: MozJPEG rejects paletted TGA with 32-bit colormap (PNG8 + tRNS).
+            $parameter = "-type TrueColor TGA:- | " . escapeshellarg(self::MOZJPEG_COMMAND)
                 . " -quality " . escapeshellarg($quality)
                 . " -outfile " . escapeshellarg($outputImage->getOutputTmpPath())
                 . " -targa";
@@ -214,10 +255,78 @@ class ImageProcessor extends Processor
     }
 
     /**
+     * Pipe ImageMagick's decoded image into cwebp.
+     *
+     * @param mixed $quality
+     * @param mixed $lossless
+     * @param mixed $threads
+     * @param mixed $method
+     * @param string $outputPath
+     *
+     * @return string
+     */
+    public static function buildWebpEncoderCommand(
+        $quality,
+        $lossless,
+        $threads,
+        $method,
+        string $outputPath
+    ): string {
+        $webpMethod = self::normalizeWebpMethod($method);
+        $command = "png:- | " . escapeshellarg(self::CWEBP_COMMAND)
+            . " -q " . escapeshellarg((string) $quality)
+            . " -m " . escapeshellarg((string) $webpMethod);
+
+        if (self::normalizeWebpThreads($threads) === 1) {
+            $command .= " -mt";
+        }
+
+        if (!empty($lossless) && $lossless !== '0' && $lossless !== 'false') {
+            $command .= " -lossless";
+        }
+
+        return $command
+            . " -o " . escapeshellarg($outputPath)
+            . " -- -";
+    }
+
+    /**
+     * WebP thread-level is only 0 (disabled) or 1 (enabled).
+     *
+     * @param mixed $value
+     *
+     * @return int
+     */
+    public static function normalizeWebpThreads($value): int
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return 1;
+        }
+
+        return ((int) $value) > 0 ? 1 : 0;
+    }
+
+    /**
+     * Clamp webp-method to 0–6. Non-numeric input uses the documented default.
+     *
+     * @param mixed $value
+     *
+     * @return int
+     */
+    public static function normalizeWebpMethod($value): int
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return 4;
+        }
+
+        return max(0, min(6, (int) $value));
+    }
+
+    /**
      * This works as a cache for calculations
      *
      * @param string $key the key with wich we store a calculated value
-     * @param callback $calculate function that returns a calculated value
+     * @param callable $calculate function that returns a calculated value
      *
      * @return string|mixed
      */
@@ -309,6 +418,27 @@ class ImageProcessor extends Processor
                     $command->addArgument("-alpha remove -alpha off");
                 }
             }
+        }
+
+        return $command;
+    }
+
+    /**
+     * Add text annotation to the image
+     *
+     * @return string
+     */
+    private function addTextAnnotation(): string
+    {
+        $command = new Command("");
+
+        if (!empty($this->options->getOption('text'))) {
+            if (!empty($this->options->getOption('text-bg'))) {
+                $command->addArgument("-undercolor", $this->options->getOption('text-bg'));
+            }
+            $command->addArgument("-fill", $this->options->getOption('text-color'))
+                ->addArgument("-pointsize", $this->options->getOption('text-size'))
+                ->addArgument("-annotate +0+0 ", $this->options->getOption('text'));
         }
 
         return $command;

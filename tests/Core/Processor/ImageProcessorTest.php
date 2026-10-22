@@ -2,10 +2,13 @@
 
 namespace Tests\Core\Processor;
 
+use Core\Entity\Command;
 use Core\Processor\ImageProcessor;
+use Core\Processor\Processor;
 use Core\Entity\Image\OutputImage;
 use Core\Entity\ImageMetaInfo;
 use Tests\Core\BaseTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Class ImageProcessorTest
@@ -19,7 +22,8 @@ class ImageProcessorTest extends BaseTest
     public const PNG_TEST_SMALL_SQUARE_IMAGE = __DIR__ . '/../../testImages/square-opaque-200.png';
     public const PNG_TEST_SMALL_LANDSCAPE_IMAGE = __DIR__ . '/../../testImages/landscape-color-squares-300x200.png';
     public const PNG_TEST_SMALL_PORTRAIT_IMAGE = __DIR__ . '/../../testImages/portrait-color-squares-200x300.png';
-    public const OUTPUT_EXTENSIONS = ['png', 'jpg', 'webp', 'gif'];
+    public const TEST_IMAGE_WITH_TEXT_RESULT = __DIR__ . '/../../testImages/image-with-text-result.jpg';
+    public const OUTPUT_EXTENSIONS = ['png', 'jpg', 'webp', 'gif', 'jxl'];
 
     protected $imageProcessor;
 
@@ -31,14 +35,7 @@ class ImageProcessorTest extends BaseTest
         $this->imageProcessor = $this->imageHandler->imageProcessor();
     }
 
-    /**
-     * @param string $options
-     * @param string $expectedSize
-     * @param string $sourceImage
-     *
-     * @dataProvider shrinkProvider
-     * @throws \Exception
-     */
+    #[DataProvider('shrinkProvider')]
     public function testShrinkSuccess(string $options, string $expectedSize, string $sourceImage)
     {
         $image = $this->imageHandler->processImage($options, $sourceImage);
@@ -48,14 +45,7 @@ class ImageProcessorTest extends BaseTest
         $this->assertEquals($expectedSize, $imageDimensions);
     }
 
-    /**
-     * @param string $options
-     * @param string $expectedSize
-     * @param string $sourceImage
-     *
-     * @dataProvider expandProvider
-     * @throws \Exception
-     */
+    #[DataProvider('expandProvider')]
     public function testExpandSuccess(string $options, string $expectedSize, string $sourceImage)
     {
         $image = $this->imageHandler->processImage($options, $sourceImage);
@@ -289,5 +279,94 @@ class ImageProcessorTest extends BaseTest
         $imgInfo = new ImageMetaInfo($filePath);
 
         return $imgInfo->info();
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testTextAnnotation()
+    {
+        $image = $this->imageHandler->processImage(
+            'o_jpg,rf_1,g_Center,tbg_yellow,t_by Flyimg,tc_#306a1d,ts_32',
+            self::EXTRACT_TEST_IMAGE
+        );
+        $filesizeCrc32 = crc32(\file_get_contents($image->getOutputTmpPath()));
+        $filesize2Crc32 = crc32(\file_get_contents(self::TEST_IMAGE_WITH_TEXT_RESULT));
+        $this->generatedImage[] = $image;
+        $this->assertFileExists($image->getOutputTmpPath());
+        $this->assertEquals($filesizeCrc32, $filesize2Crc32);
+    }
+
+    #[DataProvider('preserveAspectRatioProvider')]
+    public function testPreserveAspectRatio(string $options, string $expectedSize, string $sourceImage)
+    {
+        $image = $this->imageHandler->processImage($options, $sourceImage);
+        $this->generatedImage[] = $image;
+        $this->assertFileExists($image->getOutputTmpPath());
+        $imageDimensions = $this->imageInfo($image->getOutputTmpPath())[ImageMetaInfo::IMAGE_PROP_DIMENSIONS];
+        $this->assertEquals($expectedSize, $imageDimensions);
+    }
+
+    /**
+     * Tests for preserve-aspect-ratio option
+     * @return array list of tests
+     * The key is the test name, the items in the array are:
+     * [options, expected output size, source image path]
+     */
+    public static function preserveAspectRatioProvider(): array
+    {
+        return [
+            'par_0 stretches landscape to exact dimensions' =>
+            ['w_200,h_300,par_0', '200x300', self::PNG_TEST_LANDSCAPE_IMAGE],
+            'par_0 stretches portrait to exact dimensions' =>
+            ['w_300,h_200,par_0', '300x200', self::PNG_TEST_PORTRAIT_IMAGE],
+            'par_0 stretches square to exact dimensions' =>
+            ['w_200,h_300,par_0', '200x300', self::PNG_TEST_SQUARE_IMAGE],
+            'par_1 preserves aspect ratio for landscape' =>
+            ['w_200,h_300,par_1', '200x133', self::PNG_TEST_LANDSCAPE_IMAGE],
+            'par_1 preserves aspect ratio for portrait' =>
+            ['w_300,h_200,par_1', '133x200', self::PNG_TEST_PORTRAIT_IMAGE],
+            'par_1 preserves aspect ratio for square' =>
+            ['w_200,h_300,par_1', '200x200', self::PNG_TEST_SQUARE_IMAGE],
+            'default (par_1) preserves aspect ratio for landscape' =>
+            ['w_200,h_300', '200x133', self::PNG_TEST_LANDSCAPE_IMAGE],
+        ];
+    }
+
+    /**
+     * Palette PNG with transparency (PNG8 + tRNS) must convert to JPEG at native
+     * size. Without -type TrueColor, MozJPEG rejects the colormapped TGA pipe.
+     *
+     * @throws \Exception
+     */
+    public function testPalettePngWithTransparencyConvertsToJpeg()
+    {
+        $png8Path = sys_get_temp_dir() . '/flyimg-palette-trns.png';
+        $createPng = new Command(Processor::IM_CONVERT_COMMAND);
+        $createPng->addArgument('-size', '64x64')
+            ->addArgument('xc:none')
+            ->addArgument('-fill', 'red')
+            ->addArgument('-draw', 'circle 32,32 32,8')
+            ->addArgument('PNG8:' . $png8Path);
+        $this->imageProcessor->execute($createPng);
+
+        $image = $this->imageHandler->processImage('o_jpg,rf_1', $png8Path);
+        $this->generatedImage[] = $image;
+
+        $this->assertFileExists($image->getOutputTmpPath());
+        $this->assertEquals('image/jpeg', (new ImageMetaInfo($image->getOutputTmpPath()))->mimeType());
+        $this->assertEquals(
+            '64x64',
+            $this->imageInfo($image->getOutputTmpPath())[ImageMetaInfo::IMAGE_PROP_DIMENSIONS]
+        );
+
+        if (is_executable(Processor::MOZJPEG_COMMAND)) {
+            $this->assertStringContainsString('-type TrueColor', $image->getCommandString());
+            $this->assertStringContainsString('TGA:-', $image->getCommandString());
+        }
+
+        if (file_exists($png8Path)) {
+            unlink($png8Path);
+        }
     }
 }

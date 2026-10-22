@@ -1,15 +1,25 @@
 ---
 home:
-   path : /
-   defaults: { _controller: 'Core\Controller\DefaultController::indexAction' }
+   path: /
+   defaults: {_controller: 'Core\Controller\DefaultController::indexAction'}
 
 upload:
-   path : /upload/{options}/{imageSrc}
-   defaults: { _controller: 'Core\Controller\DefaultController::uploadAction', imageSrc: '' }
+   path: /upload/{options}/{imageSrc}
+   defaults: {_controller: 'Core\Controller\DefaultController::uploadAction',
+               imageSrc: ''}
    requirements:
-      imageSrc: .+
+      imageSrc: .*
+   methods: [GET]
+
+upload_post:
+   path: /upload/{options}
+   defaults: {_controller: 'Core\Controller\DefaultController::uploadStreamAction'}
+   methods: [POST]
+
 path:
-   path : /path/{options}/{imageSrc}
-   defaults: { _controller: 'Core\Controller\DefaultController::pathAction', imageSrc: '' }
+   path: /path/{options}/{imageSrc}
+   defaults: {_controller: 'Core\Controller\DefaultController::pathAction',
+               imageSrc: ''}
    requirements:
-      imageSrc: .+
+      imageSrc: .*
+   methods: [GET]

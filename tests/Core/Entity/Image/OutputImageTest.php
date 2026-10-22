@@ -7,9 +7,7 @@ use Core\Entity\Image\OutputImage;
 use Core\Entity\OptionsBag;
 use Tests\Core\BaseTest;
 
-/**
- * @backupGlobals disabled
- */
+#[BackupGlobals('disabled')]
 class OutputImageTest extends BaseTest
 {
     /**
@@ -40,14 +38,21 @@ class OutputImageTest extends BaseTest
             'gravity' => 'Center',
             'filter' => 'Lanczos',
             'rotate' => '-45',
+            'text' => null,
+            'text-color' => 'white',
+            'text-size' => 14,
+            'text-bg' => null,
             'scale' => '50',
             'sampling-factor' => '1x1',
             'refresh' => '1',
-            'smart-crop' => 0,
+            'jxl-effort' => 5,
+            'jxl-decoding-speed' => null,
+            'smart-crop' => false,
             'extent' => '100x80',
-            'preserve-aspect-ratio' => 1,
-            'preserve-natural-size' => 1,
-            'webp-lossless' => 0,
+            'preserve-aspect-ratio' => true,
+            'preserve-natural-size' => true,
+            'webp-lossless' => false,
+            'webp-method' => 4,
             'gif-frame' => 0,
             'extract' => null,
             'extract-top-x' => null,
@@ -55,6 +60,7 @@ class OutputImageTest extends BaseTest
             'extract-bottom-x' => null,
             'extract-bottom-y' => null,
             'pdf-page-number' => 1,
+            'density' => 72,
             'time' => '00:00:01',
             'colorspace' =>  'sRGB',
             'monochrome' => null,

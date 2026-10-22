@@ -11,6 +11,9 @@ use Core\Processor\FaceDetectProcessor;
 use Core\Processor\ImageProcessor;
 use Core\Processor\SmartCropProcessor;
 use League\Flysystem\Filesystem;
+use Core\Handler\RateLimitHandler;
+use Core\RateLimiter\RateLimiterFactory;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class ImageHandler
@@ -32,6 +35,9 @@ class ImageHandler
 
     /** @var SecurityHandler */
     protected $securityHandler;
+
+    /** @var RateLimitHandler */
+    protected $rateLimitHandler;
 
     /** @var Filesystem */
     protected $filesystem;
@@ -55,6 +61,11 @@ class ImageHandler
         $this->extractProcessor = new ExtractProcessor();
         $this->smartCropProcessor = new SmartCropProcessor();
         $this->securityHandler = new SecurityHandler($appParameters);
+
+        if ($this->appParameters->parameterByKey('rate_limit_enabled')) {
+            $rateLimiter = RateLimiterFactory::create($appParameters);
+            $this->rateLimitHandler = new RateLimitHandler($rateLimiter, $appParameters);
+        }
     }
 
     /**
@@ -91,10 +102,11 @@ class ImageHandler
      */
     public function processImage(string $options, string $imageSrc): OutputImage
     {
+        $imageSrc = preg_replace('#^(https?):/([^/])#', '$1://$2', $imageSrc);
         [$options, $imageSrc] = $this->securityHandler->checkSecurityHash($options, $imageSrc);
         $this->securityHandler->checkRestrictedDomains($imageSrc);
 
-
+        $request = Request::createFromGlobals();
         $optionsBag = new OptionsBag($this->appParameters, $options);
         $inputImage = new InputImage($optionsBag, $imageSrc);
         $outputImage = new OutputImage($inputImage);
@@ -103,11 +115,20 @@ class ImageHandler
             if ($this->filesystem->has($outputImage->getOutputImageName()) && $optionsBag->get('refresh')) {
                 $this->filesystem->delete($outputImage->getOutputImageName());
             }
-
+            // Check if the image is already generated
             if (!$this->filesystem->has($outputImage->getOutputImageName())) {
+                // Check if rate limiting is enabled
+                if ($this->appParameters->parameterByKey('rate_limit_enabled')) {
+                    $headers = $this->rateLimitHandler->checkRateLimit($request);
+                    // Attach the rate limit headers to the output image
+                    foreach ($headers as $key => $value) {
+                        $outputImage->setOutputRateLimitHeader($key, $value);
+                    }
+                }
+                // Process the image
                 $outputImage = $this->processNewImage($outputImage);
             }
-
+            // Attach the output content to the output image
             $outputImage->attachOutputContent($this->filesystem->read($outputImage->getOutputImageName()));
         } catch (\Exception $e) {
             $outputImage->removeOutputImage();
@@ -172,9 +193,48 @@ class ImageHandler
         //Check Face Detection options
         $this->faceDetectionProcess($outputImage);
 
+        $tmpPath = $outputImage->getOutputTmpPath();
+
+        // Retry mechanism for concurrent access
+        $maxRetries = 3;
+        $retryDelay = 100000; // 100ms in microseconds
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            if (!file_exists($tmpPath)) {
+                if ($attempt < $maxRetries) {
+                    usleep($retryDelay);
+                    continue;
+                }
+                throw new \Exception("Temporary file not found after $maxRetries attempts: " . $tmpPath);
+            }
+
+            $handle = fopen($tmpPath, 'r');
+            if ($handle === false) {
+                if ($attempt < $maxRetries) {
+                    usleep($retryDelay);
+                    continue;
+                }
+                throw new \Exception("Failed to open temporary file after $maxRetries attempts: " . $tmpPath);
+            }
+
+            $content = stream_get_contents($handle);
+            fclose($handle);
+
+            if ($content === false) {
+                if ($attempt < $maxRetries) {
+                    usleep($retryDelay);
+                    continue;
+                }
+                throw new \Exception("Failed to read from temporary file after $maxRetries attempts: " . $tmpPath);
+            }
+
+            // Success - break out of retry loop
+            break;
+        }
+
         $this->filesystem->write(
             $outputImage->getOutputImageName(),
-            stream_get_contents(fopen($outputImage->getOutputTmpPath(), 'r'))
+            $content
         );
 
         return $outputImage;
@@ -197,6 +257,9 @@ class ImageHandler
      */
     public function responseContentType(OutputImage $outputImage): string
     {
+        if ($outputImage->getOutputImageExtension() == OutputImage::EXT_JXL) {
+            return InputImage::JXL_MIME_TYPE;
+        }
         if ($outputImage->getOutputImageExtension() == OutputImage::EXT_AVIF) {
             return InputImage::AVIF_MIME_TYPE;
         }

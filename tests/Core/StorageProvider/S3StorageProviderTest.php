@@ -2,7 +2,7 @@
 
 namespace Tests\Core\StorageProvider;
 
-use Aws\S3\Exception\S3Exception;
+use League\Flysystem\UnableToCheckFileExistence;
 use Core\Exception\MissingParamsException;
 use Core\Handler\ImageHandler;
 use Core\StorageProvider\S3StorageProvider;
@@ -18,7 +18,7 @@ class S3StorageProviderTest extends BaseTest
      */
     public function testUploadActionWithS3StorageS3Exception()
     {
-        $this->expectException(S3Exception::class);
+        $this->expectException(UnableToCheckFileExistence::class);
 
         unset($this->app['flysystems']);
         unset($this->app['image.handler']);
@@ -56,11 +56,16 @@ class S3StorageProviderTest extends BaseTest
                 'secret_key' => 'xxxxx',
                 'region' => 'xxxxx',
                 'bucket_name' => 'xxxxx',
+                'path_prefix' => 'xxxxx',
+                'visibility' => 'PRIVATE',
             ]
         );
 
         $this->app->register(new S3StorageProvider());
-        $this->assertStringContainsString('https://s3', $this->app['flysystems']['file_path_resolver']);
+        $this->assertStringMatchesFormat(
+            'https://%s.s3.%s.amazonaws.com/%s',
+            $this->app['flysystems']['file_path_resolver']
+        );
     }
 
     /**
@@ -73,11 +78,36 @@ class S3StorageProviderTest extends BaseTest
             'aws_s3',
             [
                 'access_id' => 'xxxxx',
-                'secret_key' => '',
-                'region' => '',
-                'bucket_name' => '',
+                'secret_key' => 'xxxxx',
+                'region' => '', // region is required
+                'bucket_name' => '' // bucket_name is required
             ]
         );
         $this->app->register(new S3StorageProvider());
+    }
+
+    /**
+     * Test IRSA configuration without access_id and secret_key
+     */
+    public function testUploadActionWithS3IRSA()
+    {
+        unset($this->app['flysystems']);
+        unset($this->app['image.handler']);
+        $this->app['params']->addParameter(
+            'aws_s3',
+            [
+                // access_id and secret_key are not needed with IRSA
+                'region' => 'eu-central-1',
+                'bucket_name' => 'test-bucket',
+                'path_prefix' => 'test-prefix',
+                'visibility' => 'PRIVATE',
+            ]
+        );
+
+        $this->app->register(new S3StorageProvider());
+        $this->assertStringMatchesFormat(
+            'https://%s.s3.%s.amazonaws.com/%s',
+            $this->app['flysystems']['file_path_resolver']
+        );
     }
 }

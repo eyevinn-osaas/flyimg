@@ -47,6 +47,10 @@ class CoreController
      */
     public function render(string $templateName): Response
     {
+        $composerJsonContent = file_get_contents(ROOT_DIR . '/composer.json');
+        $version = json_decode($composerJsonContent, true)['version'];
+        $title = $this->app['params']->parameterByKey('home_page_title');
+
         $templateFullPath = ROOT_DIR . '/src/Core/Views/' . $templateName . '.html';
 
         if (!file_exists($templateFullPath)) {
@@ -56,6 +60,23 @@ class CoreController
         ob_start();
         include($templateFullPath);
         $body = ob_get_contents();
+
+        // Get current domain for dynamic URLs
+        $request = $this->app['request_stack']->getCurrentRequest();
+        $currentDomain = '';
+
+        if ($request) {
+            $currentDomain = $request->getSchemeAndHttpHost();
+            if ($this->app['params']->parameterByKey('app_domain')) {
+                $currentDomain = $this->app['params']->parameterByKey('app_domain');
+            }
+        }
+
+        $body = strtr($body, [
+            '{$version}' => $version,
+            '{$title}' => $title,
+            '{$current_domain}' => $currentDomain
+        ]);
         ob_end_clean();
 
         $this->response->setContent($body);

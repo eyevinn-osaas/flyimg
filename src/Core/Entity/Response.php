@@ -5,6 +5,7 @@ namespace Core\Entity;
 use Core\Entity\Image\OutputImage;
 use Core\Handler\ImageHandler;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class Response
@@ -67,15 +68,28 @@ class Response extends BaseResponse
         }
 
         $this->addLastModifiedHeader($outputImageName);
+        $this->addRateLimitHeaders($image);
     }
 
+    /**
+     * Add rate limit headers
+     * @param OutputImage $image
+     */
+    protected function addRateLimitHeaders(OutputImage $image): void
+    {
+        if ($this->appParameters->parameterByKey('rate_limit_enabled') && $image->getOutputRateLimitHeaders()) {
+            foreach ($image->getOutputRateLimitHeaders() as $key => $value) {
+                $this->headers->set($key, $value);
+            }
+        }
+    }
     /**
      * Add Security Headers
      */
     protected function addLastModifiedHeader($outputImageName): void
     {
         $storageHandler = $this->storageFileSystem['storage_handler'];
-        $lastModified = gmdate("D, d M Y H:i:s T", $storageHandler->getTimestamp($outputImageName));
+        $lastModified = gmdate("D, d M Y H:i:s T", $storageHandler->lastModified($outputImageName));
         $this->headers->set('Last-Modified', $lastModified);
     }
 
@@ -104,8 +118,6 @@ class Response extends BaseResponse
         if ($this->appParameters->parameterByKey('disable_cache')) {
             $image->removeGeneratedImage();
         }
-
-        $image->removeOutputImage();
     }
 
     /**
@@ -116,7 +128,94 @@ class Response extends BaseResponse
     {
         $imagePath = sprintf($this->storageFileSystem['file_path_resolver'], $image->getOutputImageName());
         $this->setContent($imagePath);
-        $image->removeOutputImage();
+        $this->generateHeaders($image);
+    }
+
+    /**
+     * Process upload stream request and generate the image response.
+     */
+    public function handleUploadStream(string $options, Request $request): void
+    {
+        $multipartSource = $this->resolveMultipartFileSource($request);
+        if ($multipartSource) {
+            $image = $this->imageHandler->processImage($options, $multipartSource);
+            $this->generateImageResponse($image);
+            return;
+        }
+
+        $source = $this->resolveBodySource($request);
+        $image = $this->imageHandler->processImage($options, $source);
+        $this->generateImageResponse($image);
+    }
+
+    /**
+     * Resolve a source path when a multipart form file is uploaded.
+     */
+    private function resolveMultipartFileSource(Request $request): ?string
+    {
+        if (!$request->files || !$request->files->has('file')) {
+            return null;
+        }
+        $uploaded = $request->files->get('file');
+        if (is_array($uploaded)) {
+            $uploaded = reset($uploaded);
+        }
+        if (!$uploaded) {
+            return null;
+        }
+        $realPath = method_exists($uploaded, 'getRealPath') ? $uploaded->getRealPath() : '';
+        return ($realPath && file_exists($realPath)) ? $realPath : null;
+    }
+
+    /**
+     * Resolve a source string from the request body and headers.
+     * Produces either a data URI or returns the raw string if it's already a data URI.
+     */
+    private function resolveBodySource(Request $request): string
+    {
+        $contentType = $request->headers->get('Content-Type', '');
+        $rawBody = (string)$request->getContent();
+        $trimmed = trim($rawBody);
+
+        if (stripos($contentType, 'application/json') !== false) {
+            $data = json_decode($rawBody, true);
+            $source = isset($data['dataUri']) ? (string)$data['dataUri'] : '';
+            if (!$source && isset($data['base64'])) {
+                $source = 'data:application/octet-stream;base64,' . $data['base64'];
+            }
+            return $source ?: '';
+        }
+
+        if (
+            stripos($contentType, 'application/octet-stream') !== false
+            || stripos($contentType, 'image/') !== false
+        ) {
+            if ($trimmed !== '' && stripos($trimmed, 'data:') === 0) {
+                return $trimmed;
+            }
+            return $this->looksLikeBase64($trimmed)
+                ? 'data:application/octet-stream;base64,' . $trimmed
+                : 'data:application/octet-stream;base64,' . base64_encode($rawBody);
+        }
+
+        return ($trimmed !== '' && stripos($trimmed, 'data:') === 0)
+            ? $trimmed
+            : 'data:application/octet-stream;base64,' . $trimmed;
+    }
+
+    /**
+     * Heuristic check if a string looks like base64.
+     */
+    private function looksLikeBase64(string $s): bool
+    {
+        if ($s === '') {
+            return false;
+        }
+        if (preg_match('/^[A-Za-z0-9+\/\r\n%=]+$/', $s) !== 1) {
+            return false;
+        }
+        $len = strlen(str_replace(["\r", "\n"], '', $s));
+        return $len % 4 === 0;
     }
 
     /**
@@ -125,6 +224,6 @@ class Response extends BaseResponse
      */
     private function getOutputImageSize(OutputImage $image): string
     {
-        return $this->storageFileSystem['storage_handler']->getSize($image->getOutputImageName());
+        return $this->storageFileSystem['storage_handler']->fileSize($image->getOutputImageName());
     }
 }
